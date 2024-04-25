@@ -1,59 +1,61 @@
 package app.demo.controller;
 
-import app.demo.entity.Users;
+import app.demo.entity.User;
 import app.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.Date;
-import java.util.List;
+import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
+@Validated
 public class UserController {
 
-    @Autowired
-    UserService userService;
+    private final UserService userService;
 
-    @GetMapping
-    public ResponseEntity<List<Users>> getUsers() {
-        List<Users> users = userService.getUsers();
-        return new ResponseEntity<>(users, HttpStatus.OK);
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @PostMapping
-    public ResponseEntity<Users> createUser(@Valid @RequestBody Users user) {
-        Users createdUser = userService.createUser(user);
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    public ResponseEntity<Object> createUser(@Valid @RequestBody User user) {
+        return userService.createUser(user);
     }
 
     @PutMapping("/{userId}")
-    public ResponseEntity<Users> updateUser(@PathVariable("userId") int userId, @Valid @RequestBody Users user) {
-        Users updatedUser = userService.updateUser(userId, user);
-        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    public ResponseEntity<Object> updateUser(@PathVariable Long userId, @RequestBody User user) {
+        return userService.updateUser(userId, user);
     }
 
-    @PutMapping("/updateAll/{userId}")
-    public ResponseEntity<Users> updateAllUserFields(@PathVariable("userId") int userId, @Valid @RequestBody Users user) {
-        Users updatedUser = userService.updateAllUserFields(userId, user);
-        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    public ResponseEntity<String> updateAllUserFields(@PathVariable Long userId, @Valid @RequestBody User user) {
+        return userService.updateAllUserFields(userId, user);
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable("userId") int userId) {
-        userService.deleteUser(userId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<Object> deleteUser(@PathVariable Long userId) {
+        return userService.deleteUser(userId);
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<Object> getUserById(@PathVariable Long userId) {
+        return userService.getUserById(userId);
+    }
+
+    @GetMapping
+    public ResponseEntity<Object> getAllUsers() {
+        return userService.getAllUsers();
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Users>> searchUsersByBirthDateRange(@RequestParam("from") Date fromDate, @RequestParam("to") Date toDate) {
-        if (fromDate.after(toDate)) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        List<Users> users = userService.searchUsersByBirthDateRange(fromDate, toDate);
-        return new ResponseEntity<>(users, HttpStatus.OK);
+    public ResponseEntity<Object> getUsersByBirthDateRange(
+            @RequestParam("from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        return userService.getUsersByBirthDateRange(fromDate, toDate);
     }
 }
